@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GPT Text Splitter</title>
+
+  <!-- CSS only -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.7/tailwind.min.css">
+
+  <style>
+    .chunk {
+      border: 1px solid #ced4da;
+      padding: 15px;
+      margin-bottom: 15px;
+      background-color: #f5f5f5;
+      border-radius: 5px;
+      max-height: 200px;
+      overflow-y: auto; 
+      max-width: 500px;
+      transition: background-color 0.8s; 
+    }
+    .chunk p {
+      white-space: pre-wrap;
+    }
+    .copy-button {
+      width: 100px; 
+      margin-top: 10px; 
+      margin-bottom: 20px; 
+    }
+    .copied {
+      background-color: #d4edda;
+    }
+    .chunk-container {
+      display: flex;
+      flex-direction: column;
+      align-items: start; 
+    }
+    .card {
+      width: 80%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .open-tokenizer {
+      background-color: #4caf50;
+      color: white;
+      border-radius: 20px;
+      padding: 5px 10px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s ease-in-out;
+    }
+    .open-tokenizer:hover {
+      background-color: #388e3c;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 body">
+  <div class="card py-5 text-center w-full">
+    <h1 class="mb-4 text-3xl font-bold text-gray-800">GPT Text Splitter</h1>
+    <div class="card py-5 text-center bg-gray-200 w-10/12 rounded-lg">
+      <h2 class="mb-4 text-xl font-bold text-gray-800">Quick Links</h2>
+      <div class="flex">
+      <a href="https://platform.openai.com/tokenizer" target="_blank" class="open-tokenizer mr-2">Open Tokenizer</a>
+      <a href="https://chat.openai.com/?model=text-davinci-002-render-sha" target="_blank" class="open-tokenizer mr-2">Open GPT-3.5</a>
+      <a href="https://chat.openai.com/?model=gpt-4" target="_blank" class="open-tokenizer">Open GPT-4</a>
+    </div></div>
+    <div class="form-group mt-4 w-10/12">
+      <label for="prompt-text" class="block text-gray-700 font-medium mb-3">Add a prompt:</label>
+      <textarea id="prompt-text" rows="3" class="form-control w-full rounded-lg"></textarea>
+    </div>
+
+    <div class="form-group mt-4 w-10/12">
+      <label for="text-area" class="block text-gray-700 font-medium mb-3">Paste your text:</label>
+      <textarea id="text-area" rows="3" class="form-control w-full rounded-lg"></textarea>
+    </div>
+    <form id="splitter-form" class="my-4">
+      <!-- <div class="form-group">
+        <label for="file-upload" class="block text-gray-700 font-medium mb-3">or </label>
+        <input id="file-upload" type="file" multiple class="form-control-file py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" />
+      </div> -->
+
+      <div class="form-group mt-4">
+        <label for="chunk-size" class="block text-gray-700 font-medium mb-3">Chunk size:</label>
+        <input id="chunk-size" type="number" value="25000" class="form-control" />
+      </div>
+
+      <button type="button" id="process-button" class="px-4 py-2 mt-6 bg-blue-500 text-white font-medium rounded hover:bg-blue-600 transition duration-200 ease-in-out">Process</button>
+    </form>
+
+    <div id="output" class="my-4"></div>
+    </div>
+
+    <!-- CSS only -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.7/tailwind.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+      body {
+        font-family: 'Lexend', sans-serif;
+      }
+      .form-group label {
+        font-family: 'Lexend', sans-serif;
+      }
+    </style>
+
+  <!-- JavaScript Bundle with Popper.js -->
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.6.0/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    document.getElementById('process-button').addEventListener('click', function() {
+      var text = document.getElementById('text-area').value;
+      var chunkSize = document.getElementById('chunk-size').value;
+      var prompt = document.getElementById('prompt-text').value;
+
+      var words = text.split(' ');
+      var chunks = [];
+      var currentChunk = '';
+
+      for (var i = 0; i < words.length; i++) {
+        if ((currentChunk + words[i]).length > chunkSize) {
+          chunks.push(currentChunk);
+          currentChunk = words[i];
+        } else {
+          currentChunk += ' ' + words[i];
+        }
+      }
+
+      chunks.push(currentChunk); // push the last chunk
+
+      var output = document.getElementById('output');
+      output.innerHTML = '';
+
+      for (var i = 0; i < chunks.length; i++) {
+        var chunkContainer = document.createElement('div');
+        chunkContainer.className = 'chunk-container mb-5';
+
+        var chunkElement = document.createElement('div');
+        chunkElement.className = 'chunk border p-3 mb-2';
+        var chunkText = document.createElement('p');
+        chunkText.textContent = prompt;
+        chunkText.textContent += '[START PASSAGE ' + (i+1) + '/' + chunks.length + ']\n' +
+                               chunks[i] +
+                               '\n[END PASSAGE ' + (i+1) + '/' + chunks.length + ']';
+        chunkElement.appendChild(chunkText);
+
+        var copyButton = document.createElement('button');
+        copyButton.style.width = '100%';
+        copyButton.textContent = 'Copy Chunk ' + (i+1) + '/' + chunks.length;
+        copyButton.className = 'btn btn-secondary copy-button px-4 py-2 bg-gray-300 text-gray-700 font-medium rounded hover:bg-gray-400 transition duration-200 ease-in-out';
+        copyButton.addEventListener('click', (function(chunkElement, chunkText) {
+          return function() {
+            navigator.clipboard.writeText(chunkText.textContent);
+            chunkElement.classList.add('copied');
+          };
+        })(chunkElement, chunkText));
+
+        chunkContainer.appendChild(chunkElement);
+        chunkContainer.appendChild(copyButton);
+        output.appendChild(chunkContainer);
+      }
+    });
+  </script>
+</body>
+</html>
